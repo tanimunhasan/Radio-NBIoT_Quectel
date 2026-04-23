@@ -1,0 +1,11 @@
+"./main.obj"
+"./Common/studiolib.obj"
+"./Hal/hal_gpio.obj"
+"./Hal/hal_system.obj"
+"./Hal/hal_uart.obj"
+"./Protocol/Protocol.obj"
+"./Radio/Nbiot.obj"
+"../lnk_msp430fr5043.cmd"
+-llibmpu_init.a
+-llibmath.a
+-llibc.a
