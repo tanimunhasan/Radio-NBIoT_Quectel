@@ -17,14 +17,15 @@ main.obj: C:/ti/ccs1271/ccs/tools/compiler/ti-cgt-msp430_21.6.1.LTS/include/sys/
 main.obj: C:/ti/ccs1271/ccs/tools/compiler/ti-cgt-msp430_21.6.1.LTS/include/machine/_types.h
 main.obj: C:/ti/ccs1271/ccs/tools/compiler/ti-cgt-msp430_21.6.1.LTS/include/machine/_stdint.h
 main.obj: C:/ti/ccs1271/ccs/tools/compiler/ti-cgt-msp430_21.6.1.LTS/include/sys/_stdint.h
-main.obj: D:/MSP430FR5969_Dynament_Implementation/LearnStaff/Common/studiolib.h
-main.obj: D:/MSP430FR5969_Dynament_Implementation/LearnStaff/Hal/hal_uart.h
+main.obj: D:/MSP430FR5969_Dynament_Implementation/MSP430_Base_Radio/Common/studiolib.h
+main.obj: D:/MSP430FR5969_Dynament_Implementation/MSP430_Base_Radio/Hal/hal_uart.h
 main.obj: C:/ti/ccs1271/ccs/tools/compiler/ti-cgt-msp430_21.6.1.LTS/include/stdbool.h
-main.obj: D:/MSP430FR5969_Dynament_Implementation/LearnStaff/Hal/hal_gpio.h
-main.obj: D:/MSP430FR5969_Dynament_Implementation/LearnStaff/Hal/hal_system.h
+main.obj: D:/MSP430FR5969_Dynament_Implementation/MSP430_Base_Radio/Hal/hal_gpio.h
+main.obj: D:/MSP430FR5969_Dynament_Implementation/MSP430_Base_Radio/Hal/hal_system.h
 main.obj: C:/ti/ccs1271/ccs/tools/compiler/ti-cgt-msp430_21.6.1.LTS/include/stdio.h
 main.obj: C:/ti/ccs1271/ccs/tools/compiler/ti-cgt-msp430_21.6.1.LTS/include/stdarg.h
-main.obj: D:/MSP430FR5969_Dynament_Implementation/LearnStaff/Radio/Nbiot.h
+main.obj: D:/MSP430FR5969_Dynament_Implementation/MSP430_Base_Radio/Radio/Nbiot.h
+main.obj: D:/MSP430FR5969_Dynament_Implementation/MSP430_Base_Radio/user_config.h
 
 ../main.c:
 
@@ -60,19 +61,21 @@ C:/ti/ccs1271/ccs/tools/compiler/ti-cgt-msp430_21.6.1.LTS/include/machine/_stdin
 
 C:/ti/ccs1271/ccs/tools/compiler/ti-cgt-msp430_21.6.1.LTS/include/sys/_stdint.h:
 
-D:/MSP430FR5969_Dynament_Implementation/LearnStaff/Common/studiolib.h:
+D:/MSP430FR5969_Dynament_Implementation/MSP430_Base_Radio/Common/studiolib.h:
 
-D:/MSP430FR5969_Dynament_Implementation/LearnStaff/Hal/hal_uart.h:
+D:/MSP430FR5969_Dynament_Implementation/MSP430_Base_Radio/Hal/hal_uart.h:
 
 C:/ti/ccs1271/ccs/tools/compiler/ti-cgt-msp430_21.6.1.LTS/include/stdbool.h:
 
-D:/MSP430FR5969_Dynament_Implementation/LearnStaff/Hal/hal_gpio.h:
+D:/MSP430FR5969_Dynament_Implementation/MSP430_Base_Radio/Hal/hal_gpio.h:
 
-D:/MSP430FR5969_Dynament_Implementation/LearnStaff/Hal/hal_system.h:
+D:/MSP430FR5969_Dynament_Implementation/MSP430_Base_Radio/Hal/hal_system.h:
 
 C:/ti/ccs1271/ccs/tools/compiler/ti-cgt-msp430_21.6.1.LTS/include/stdio.h:
 
 C:/ti/ccs1271/ccs/tools/compiler/ti-cgt-msp430_21.6.1.LTS/include/stdarg.h:
 
-D:/MSP430FR5969_Dynament_Implementation/LearnStaff/Radio/Nbiot.h:
+D:/MSP430FR5969_Dynament_Implementation/MSP430_Base_Radio/Radio/Nbiot.h:
+
+D:/MSP430FR5969_Dynament_Implementation/MSP430_Base_Radio/user_config.h:
 

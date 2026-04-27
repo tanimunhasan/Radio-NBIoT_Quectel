@@ -1,7 +1,7 @@
 # FIXED
 
 Common/studiolib.obj: ../Common/studiolib.c
-Common/studiolib.obj: D:/MSP430FR5969_Dynament_Implementation/LearnStaff/Hal/hal_uart.h
+Common/studiolib.obj: D:/MSP430FR5969_Dynament_Implementation/MSP430_Base_Radio/Hal/hal_uart.h
 Common/studiolib.obj: C:/ti/ccs1271/ccs/ccs_base/msp430/include/msp430.h
 Common/studiolib.obj: C:/ti/ccs1271/ccs/ccs_base/msp430/include/msp430fr5043.h
 Common/studiolib.obj: C:/ti/ccs1271/ccs/ccs_base/msp430/include/in430.h
@@ -25,7 +25,7 @@ Common/studiolib.obj: ../Common/studiolib.h
 
 ../Common/studiolib.c:
 
-D:/MSP430FR5969_Dynament_Implementation/LearnStaff/Hal/hal_uart.h:
+D:/MSP430FR5969_Dynament_Implementation/MSP430_Base_Radio/Hal/hal_uart.h:
 
 C:/ti/ccs1271/ccs/ccs_base/msp430/include/msp430.h:
 

@@ -1,20 +1,27 @@
+//******************************************************************************
+// File: Nbiot.h
+//******************************************************************************
+
 #ifndef NBIOT_H_
 #define NBIOT_H_
 
+#include <msp430.h>
 #include <stdint.h>
 #include <stdbool.h>
+#include "user_config.h"
+
+#if (USE_NBIOT_RADIO)
 
 /* -------------------------------------------------
  * BC660K command definitions
  * ------------------------------------------------- */
-
-/* basic modem commands */
 #define NBIOT_CMD_AT                 "AT\r\n"
 #define NBIOT_CMD_ATE0               "ATE0\r\n"
 #define NBIOT_CMD_ATI                "ATI\r\n"
 #define NBIOT_CMD_CGMR               "AT+CGMR\r\n"
 #define NBIOT_CMD_CGSN               "AT+CGSN=1\r\n"
-#define NBIOT_CMD_CSQ                "AT+CSQ\r\n"
+#define NBIOT_CMD_CSQ                "AT+CSQ\r\n"           // RSSI
+#define NBIOT_CMD_QCCID              "AT+QCCID\r\n"         // SIM ID
 #define NBIOT_CMD_CEREG_Q            "AT+CEREG?\r\n"
 #define NBIOT_CMD_CEREG_URC          "AT+CEREG=5\r\n"
 #define NBIOT_CMD_CGATT_Q            "AT+CGATT?\r\n"
@@ -24,16 +31,12 @@
 #define NBIOT_CMD_QNBIOTEVENT        "AT+QNBIOTEVENT=1,1\r\n"
 #define NBIOT_CMD_QCFG_DSEVENT_OFF   "AT+QCFG=\"dsevent\",0\r\n"
 #define NBIOT_CMD_QICFG_DATAFORMAT   "AT+QICFG=\"dataformat\",0,0\r\n"
-
-/* baud handling */
 #define NBIOT_CMD_IPR_9600           "AT+IPR=9600\r\n"
 
-/* keep-awake / test mode */
 #define NBIOT_CMD_DISABLE_PSM        "AT+CPSMS=0\r\n"
 #define NBIOT_CMD_DISABLE_CEDRXS     "AT+CEDRXS=0,5\r\n"
 #define NBIOT_CMD_DISABLE_NPTWEDRXS  "AT+NPTWEDRXS=0,5\r\n"
 
-/* socket command bases */
 #define NBIOT_CMD_CREATE_PDP_BASE    "AT+CGDCONT=1,\"IP\""
 #define NBIOT_CMD_OPEN_SOCKET_BASE   "AT+QIOPEN=0,0,"
 #define NBIOT_CMD_CLOSE_SOCKET_BASE  "AT+QICLOSE="
@@ -41,7 +44,7 @@
 #define NBIOT_CMD_READ_DATA_BASE     "AT+QIRD="
 
 /* -------------------------------------------------
- * Office working UDP endpoint
+ * Test endpoint
  * ------------------------------------------------- */
 #define NBIOT_TEST_SERVER_IP         "13.135.238.190"
 #define NBIOT_TEST_UDP_SERVER_PORT   "51300"
@@ -51,12 +54,6 @@
 
 /* -------------------------------------------------
  * Office-style payload definition
- *
- * Final transmitted message format:
- * IMEI,INDEX,FLAGS,SIM_ID,RSSI HEX_BODY
- *
- * Example:
- * 861214083357348,0000,10,89882280666220454783,20 69E6BE42030201030E4A0000
  * ------------------------------------------------- */
 typedef struct
 {
@@ -151,7 +148,7 @@ void NbIot_Task(void);
 void NbIot_PrintHelp(void);
 NBIOT_RESULT_ENUM NbIot_Process(void);
 
-/* office payload helper functions */
+/* office payload helpers */
 void NbIot_LoadOfficeDemoPayload(void);
 void NbIot_BuildOfficePayload(const NBIOT_OFFICE_PAYLOAD_TYPE *payload,
                               char *buffer,
@@ -160,5 +157,7 @@ void NbIot_BuildOfficePayload(const NBIOT_OFFICE_PAYLOAD_TYPE *payload,
 /* test control */
 void NbIot_StartUdpDemo(void);
 void NbIot_StartTcpDemo(void);
+
+#endif /* USE_NBIOT_RADIO */
 
 #endif /* NBIOT_H_ */

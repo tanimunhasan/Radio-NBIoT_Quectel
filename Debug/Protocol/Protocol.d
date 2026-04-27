@@ -20,7 +20,7 @@ Protocol/Protocol.obj: C:/ti/ccs1271/ccs/tools/compiler/ti-cgt-msp430_21.6.1.LTS
 Protocol/Protocol.obj: C:/ti/ccs1271/ccs/tools/compiler/ti-cgt-msp430_21.6.1.LTS/include/sys/_stdint.h
 Protocol/Protocol.obj: C:/ti/ccs1271/ccs/tools/compiler/ti-cgt-msp430_21.6.1.LTS/include/string.h
 Protocol/Protocol.obj: C:/ti/ccs1271/ccs/tools/compiler/ti-cgt-msp430_21.6.1.LTS/include/xlocale/_string.h
-Protocol/Protocol.obj: D:/MSP430FR5969_Dynament_Implementation/LearnStaff/Common/studiolib.h
+Protocol/Protocol.obj: D:/MSP430FR5969_Dynament_Implementation/MSP430_Base_Radio/Common/studiolib.h
 
 ../Protocol/Protocol.c:
 
@@ -62,5 +62,5 @@ C:/ti/ccs1271/ccs/tools/compiler/ti-cgt-msp430_21.6.1.LTS/include/string.h:
 
 C:/ti/ccs1271/ccs/tools/compiler/ti-cgt-msp430_21.6.1.LTS/include/xlocale/_string.h:
 
-D:/MSP430FR5969_Dynament_Implementation/LearnStaff/Common/studiolib.h:
+D:/MSP430FR5969_Dynament_Implementation/MSP430_Base_Radio/Common/studiolib.h:
 

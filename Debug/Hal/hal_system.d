@@ -7,7 +7,7 @@ Hal/hal_system.obj: C:/ti/ccs1271/ccs/ccs_base/msp430/include/in430.h
 Hal/hal_system.obj: C:/ti/ccs1271/ccs/tools/compiler/ti-cgt-msp430_21.6.1.LTS/include/intrinsics.h
 Hal/hal_system.obj: C:/ti/ccs1271/ccs/tools/compiler/ti-cgt-msp430_21.6.1.LTS/include/intrinsics_legacy_undefs.h
 Hal/hal_system.obj: C:/ti/ccs1271/ccs/ccs_base/msp430/include/legacy.h
-Hal/hal_system.obj: D:/MSP430FR5969_Dynament_Implementation/LearnStaff/Common/studiolib.h
+Hal/hal_system.obj: D:/MSP430FR5969_Dynament_Implementation/MSP430_Base_Radio/Common/studiolib.h
 Hal/hal_system.obj: C:/ti/ccs1271/ccs/tools/compiler/ti-cgt-msp430_21.6.1.LTS/include/stdint.h
 Hal/hal_system.obj: C:/ti/ccs1271/ccs/tools/compiler/ti-cgt-msp430_21.6.1.LTS/include/_ti_config.h
 Hal/hal_system.obj: C:/ti/ccs1271/ccs/tools/compiler/ti-cgt-msp430_21.6.1.LTS/include/linkage.h
@@ -38,7 +38,7 @@ C:/ti/ccs1271/ccs/tools/compiler/ti-cgt-msp430_21.6.1.LTS/include/intrinsics_leg
 
 C:/ti/ccs1271/ccs/ccs_base/msp430/include/legacy.h:
 
-D:/MSP430FR5969_Dynament_Implementation/LearnStaff/Common/studiolib.h:
+D:/MSP430FR5969_Dynament_Implementation/MSP430_Base_Radio/Common/studiolib.h:
 
 C:/ti/ccs1271/ccs/tools/compiler/ti-cgt-msp430_21.6.1.LTS/include/stdint.h:
 
