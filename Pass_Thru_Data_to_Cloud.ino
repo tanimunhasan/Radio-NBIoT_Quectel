@@ -22,6 +22,8 @@
   MKR1010 GND       -> MSP430 GND
 */
 
+/* auto on, auto off, manual packet send, multiple options: read sensor then send to msp(quectel)--> cloud  */
+
 #define USB_BAUDRATE      9600
 #define MSP430_BAUDRATE   9600
 
