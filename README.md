@@ -1,6 +1,6 @@
 # MKR1010 to MSP430FR5043 NB-IoT Gateway Integration
 
-## Project Theme
+## Overview
 
 This project uses an **Arduino MKR1010** as the sensor-reading controller and an **MSP430FR5043 + Quectel BC660K custom PCB** as the NB-IoT communication gateway.
 
