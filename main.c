@@ -22,7 +22,7 @@ void main(void)
 
     Clock_Init();
     Gpio_Init();
-    hal_uart_initDebugPort();
+    hal_uart_init();
 
     NbIot_Init();
 

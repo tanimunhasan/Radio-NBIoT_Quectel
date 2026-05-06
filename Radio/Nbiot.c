@@ -24,6 +24,7 @@
 #define NBIOT_PAYLOAD_BUFFER_LEN      256U
 #define NBIOT_RECV_LINE_LEN           192U
 #define NBIOT_RESP_BUFFER_LEN         256U
+#define NBIOT_SENSOR_PACKET_LEN       96U
 
 #define NBIOT_SHORT_TIMEOUT_MS        1200U
 #define NBIOT_MED_TIMEOUT_MS          2500U
@@ -67,6 +68,18 @@ static char g_recvLineBuffer[NBIOT_RECV_LINE_LEN];
 static char g_respBuffer[NBIOT_RESP_BUFFER_LEN];
 static uint8_t g_socketId = 0U;
 static uint8_t g_fatalRecoveryCount = 0U;
+
+typedef struct
+{
+    uint16_t n2oPpm;
+    int16_t temperatureX10;
+    uint16_t humidityX10;
+    bool valid;
+} NBIOT_MKR_SENSOR_TYPE;
+
+static NBIOT_MKR_SENSOR_TYPE g_mkrSensorData = {0U, 0, 0U, false};
+static char g_sensorPacketBuffer[NBIOT_SENSOR_PACKET_LEN];
+static uint16_t g_sensorPacketIndex = 0U;
 
 #if (ENABLE_PASSTHRU_MODE)
 static bool g_passThruMode = true;
@@ -118,6 +131,11 @@ static bool NbIot_ParseDigitsFromResponse(const char *response,
                                           uint8_t maxDigits);
 static bool NbIot_ParseCsqRssi(const char *response, uint8_t *rssiOut);
 static uint16_t NbIot_GetFakeGasValue(void);
+static bool NbIot_ParseUint16AfterKey(const char *text, const char *key, uint16_t *outValue);
+static bool NbIot_ParseSignedDecimalX10AfterKey(const char *text, const char *key, int16_t *outValue);
+static bool NbIot_ParseUnsignedDecimalX10AfterKey(const char *text, const char *key, uint16_t *outValue);
+static bool NbIot_ParseSensorPacket(const char *packet);
+static void NbIot_PrintMkrSensorData(void);
 /* socket robustness helpers */
 static bool NbIot_CloseSocketQuiet(uint8_t socketId);
 static bool NbIot_OpenUdpSocketRobust(uint8_t socketId);
@@ -135,6 +153,7 @@ static NBIOT_STATE_ENUM NbIot_ProcessUdpTestState(void);
 static NBIOT_STATE_ENUM NbIot_ProcessTcpTestState(void);
 
 static void NbIot_ProcessTerminalInput(void);
+static void NbIot_ProcessSensorInput(void);
 static void NbIot_ProcessModemOutput(void);
 
 /* builders */
@@ -1062,6 +1081,215 @@ static uint16_t NbIot_GetFakeGasValue(void)
     return (uint16_t)(seed % 501U);   /* fake gas value: 0 to 500 ppm */
 }
 
+static bool NbIot_ParseUint16AfterKey(const char *text, const char *key, uint16_t *outValue)
+{
+    const char *p;
+    uint32_t value = 0UL;
+    bool gotDigit = false;
+
+    if ((text == 0) || (key == 0) || (outValue == 0))
+    {
+        return false;
+    }
+
+    p = strstr(text, key);
+    if (p == 0)
+    {
+        return false;
+    }
+
+    p += strlen(key);
+
+    while ((*p >= '0') && (*p <= '9'))
+    {
+        gotDigit = true;
+        value = (value * 10UL) + (uint32_t)(*p - '0');
+
+        if (value > 65535UL)
+        {
+            return false;
+        }
+
+        p++;
+    }
+
+    if (!gotDigit)
+    {
+        return false;
+    }
+
+    *outValue = (uint16_t)value;
+    return true;
+}
+
+static bool NbIot_ParseSignedDecimalX10AfterKey(const char *text, const char *key, int16_t *outValue)
+{
+    const char *p;
+    int32_t integerPart = 0L;
+    int32_t decimalPart = 0L;
+    int32_t valueX10;
+    bool negative = false;
+    bool gotDigit = false;
+
+    if ((text == 0) || (key == 0) || (outValue == 0))
+    {
+        return false;
+    }
+
+    p = strstr(text, key);
+    if (p == 0)
+    {
+        return false;
+    }
+
+    p += strlen(key);
+
+    if (*p == '-')
+    {
+        negative = true;
+        p++;
+    }
+
+    while ((*p >= '0') && (*p <= '9'))
+    {
+        gotDigit = true;
+        integerPart = (integerPart * 10L) + (int32_t)(*p - '0');
+        p++;
+    }
+
+    if (!gotDigit)
+    {
+        return false;
+    }
+
+    if (*p == '.')
+    {
+        p++;
+        if ((*p >= '0') && (*p <= '9'))
+        {
+            decimalPart = (int32_t)(*p - '0');
+        }
+    }
+
+    valueX10 = (integerPart * 10L) + decimalPart;
+
+    if (negative)
+    {
+        valueX10 = -valueX10;
+    }
+
+    if ((valueX10 < -32768L) || (valueX10 > 32767L))
+    {
+        return false;
+    }
+
+    *outValue = (int16_t)valueX10;
+    return true;
+}
+
+static bool NbIot_ParseUnsignedDecimalX10AfterKey(const char *text, const char *key, uint16_t *outValue)
+{
+    const char *p;
+    uint32_t integerPart = 0UL;
+    uint32_t decimalPart = 0UL;
+    uint32_t valueX10;
+    bool gotDigit = false;
+
+    if ((text == 0) || (key == 0) || (outValue == 0))
+    {
+        return false;
+    }
+
+    p = strstr(text, key);
+    if (p == 0)
+    {
+        return false;
+    }
+
+    p += strlen(key);
+
+    while ((*p >= '0') && (*p <= '9'))
+    {
+        gotDigit = true;
+        integerPart = (integerPart * 10UL) + (uint32_t)(*p - '0');
+        p++;
+    }
+
+    if (!gotDigit)
+    {
+        return false;
+    }
+
+    if (*p == '.')
+    {
+        p++;
+        if ((*p >= '0') && (*p <= '9'))
+        {
+            decimalPart = (uint32_t)(*p - '0');
+        }
+    }
+
+    valueX10 = (integerPart * 10UL) + decimalPart;
+
+    if (valueX10 > 65535UL)
+    {
+        return false;
+    }
+
+    *outValue = (uint16_t)valueX10;
+    return true;
+}
+
+static bool NbIot_ParseSensorPacket(const char *packet)
+{
+    uint16_t n2o;
+    int16_t tempX10;
+    uint16_t humX10;
+
+    if (packet == 0)
+    {
+        return false;
+    }
+
+    if (strncmp(packet, "$SENSOR", 7U) != 0)
+    {
+        return false;
+    }
+
+    if (!NbIot_ParseUint16AfterKey(packet, "N2O=", &n2o))
+    {
+        return false;
+    }
+
+    if (!NbIot_ParseSignedDecimalX10AfterKey(packet, "TEMP=", &tempX10))
+    {
+        return false;
+    }
+
+    if (!NbIot_ParseUnsignedDecimalX10AfterKey(packet, "HUM=", &humX10))
+    {
+        return false;
+    }
+
+    g_mkrSensorData.n2oPpm = n2o;
+    g_mkrSensorData.temperatureX10 = tempX10;
+    g_mkrSensorData.humidityX10 = humX10;
+    g_mkrSensorData.valid = true;
+
+    return true;
+}
+
+static void NbIot_PrintMkrSensorData(void)
+{
+    DEBUG_STRING("N2O=");
+    UART_Debug_SendInt((int)g_mkrSensorData.n2oPpm);
+    DEBUG_STRING(" ppm, TEMPx10=");
+    UART_Debug_SendInt((int)g_mkrSensorData.temperatureX10);
+    DEBUG_STRING(", HUMx10=");
+    UART_Debug_SendInt((int)g_mkrSensorData.humidityX10);
+    DEBUG_STRING(" ");
+}
+
 void NbIot_LoadOfficeDemoPayload(void)
 {
     char imei[20];
@@ -1092,11 +1320,14 @@ void NbIot_LoadOfficeDemoPayload(void)
         rssi = 99U;
     }
 
-    /*
-     * Temporary gas value.
-     * Later you will replace this with real sensor value.
-     */
-    gasValue = NbIot_GetFakeGasValue();
+    if (g_mkrSensorData.valid)
+    {
+        gasValue = g_mkrSensorData.n2oPpm;
+    }
+    else
+    {
+        gasValue = NbIot_GetFakeGasValue();
+    }
 
     strcpy(g_officePayload.imei, imei);
     strcpy(g_officePayload.index, "0000");
@@ -1104,16 +1335,29 @@ void NbIot_LoadOfficeDemoPayload(void)
     strcpy(g_officePayload.simId, simId);
     g_officePayload.rssi = rssi;
 
-    /*
-     * Put fake gas value into payload body.
-     * Example:
-     * gasValue = 250 decimal
-     * hexBody  = 00FA
-     */
-    snprintf(g_officePayload.hexBody,
-             sizeof(g_officePayload.hexBody),
-             "%04X",
-             (unsigned int)gasValue);
+    if (g_mkrSensorData.valid)
+    {
+        /*
+         * Hex body format, 6 bytes total:
+         * N2O ppm       : uint16, ppm
+         * Temperature   : int16, value x10, e.g. 22.6 C = 226 = 00E2
+         * Humidity      : uint16, value x10, e.g. 84.1 % = 841 = 0349
+         * Example body  : 009100E20349
+         */
+        snprintf(g_officePayload.hexBody,
+                 sizeof(g_officePayload.hexBody),
+                 "%04X%04X%04X",
+                 (unsigned int)g_mkrSensorData.n2oPpm,
+                 (unsigned int)((uint16_t)g_mkrSensorData.temperatureX10),
+                 (unsigned int)g_mkrSensorData.humidityX10);
+    }
+    else
+    {
+        snprintf(g_officePayload.hexBody,
+                 sizeof(g_officePayload.hexBody),
+                 "%04X",
+                 (unsigned int)gasValue);
+    }
 }
 
 void NbIot_BuildOfficePayload(const NBIOT_OFFICE_PAYLOAD_TYPE *payload,
@@ -1860,6 +2104,7 @@ static NBIOT_STATE_ENUM NbIot_ProcessBridgeState(void)
 #endif
     }
 
+    NbIot_ProcessSensorInput();
     NbIot_ProcessTerminalInput();
     NbIot_ProcessModemOutput();
 
@@ -1876,6 +2121,55 @@ static NBIOT_STATE_ENUM NbIot_ProcessBridgeState(void)
     return NBIOT_STATE_BRIDGE;
 }
 
+static void NbIot_ProcessSensorInput(void)
+{
+    uint8_t rx;
+
+    while (hal_uart_SensorReadByte(&rx))
+    {
+        if ((rx == '\r') || (rx == '\n'))
+        {
+            continue;
+        }
+
+        if (g_sensorPacketIndex < (NBIOT_SENSOR_PACKET_LEN - 1U))
+        {
+            g_sensorPacketBuffer[g_sensorPacketIndex++] = (char)rx;
+            g_sensorPacketBuffer[g_sensorPacketIndex] = '\0';
+        }
+        else
+        {
+            DEBUG_STRING("\r\n[MKR UART] ERROR: sensor packet too long. Buffer cleared.\r\n");
+            memset(g_sensorPacketBuffer, 0, sizeof(g_sensorPacketBuffer));
+            g_sensorPacketIndex = 0U;
+            continue;
+        }
+
+        if (rx == '#')
+        {
+            DEBUG_STRING("\r\n[MKR UART RX] ");
+            DEBUG_STRING(g_sensorPacketBuffer);
+            DEBUG_STRING("\r\n");
+
+            if (NbIot_ParseSensorPacket(g_sensorPacketBuffer))
+            {
+                DEBUG_STRING("[MKR UART] Parsed OK: ");
+                NbIot_PrintMkrSensorData();
+                DEBUG_STRING("[MKR UART] Starting UDP send with MKR sensor payload...\r\n");
+                NbIot_StartUdpDemo();
+            }
+            else
+            {
+                DEBUG_STRING("[MKR UART] ERROR: invalid sensor packet.\r\n");
+            }
+
+            memset(g_sensorPacketBuffer, 0, sizeof(g_sensorPacketBuffer));
+            g_sensorPacketIndex = 0U;
+            return;
+        }
+    }
+}
+
 static void NbIot_ProcessTerminalInput(void)
 {
     uint8_t rx;
@@ -1889,6 +2183,30 @@ static void NbIot_ProcessTerminalInput(void)
             if (g_cmdIndex > 0U)
             {
                 g_cmdBuffer[g_cmdIndex] = '\0';
+
+                if (strncmp(g_cmdBuffer, "$SENSOR", 7U) == 0)
+                {
+                    DEBUG_STRING("[MKR CMD] Sensor packet received: ");
+                    DEBUG_STRING(g_cmdBuffer);
+                    DEBUG_STRING("\r\n");
+
+                    if (NbIot_ParseSensorPacket(g_cmdBuffer))
+                    {
+                        DEBUG_STRING("[MKR CMD] Parsed OK: ");
+                        NbIot_PrintMkrSensorData();
+                        DEBUG_STRING("[MKR CMD] Starting UDP send with MKR sensor payload...\r\n");
+                        g_cmdIndex = 0U;
+                        NbIot_StartUdpDemo();
+                        return;
+                    }
+                    else
+                    {
+                        DEBUG_STRING("[MKR CMD] ERROR: invalid sensor packet. Expected: $SENSOR,N2O=145,TEMP=22.6,HUM=84.1#\r\n");
+                        g_cmdIndex = 0U;
+                        NbIot_PrintPrompt();
+                        return;
+                    }
+                }
 
 #if (ENABLE_PASSTHRU_MODE)
                 if (g_passThruMode)
@@ -2005,10 +2323,14 @@ void NbIot_Init(void)
     memset(g_workBuffer, 0, sizeof(g_workBuffer));
     memset(g_recvLineBuffer, 0, sizeof(g_recvLineBuffer));
     memset(g_respBuffer, 0, sizeof(g_respBuffer));
+    memset(g_sensorPacketBuffer, 0, sizeof(g_sensorPacketBuffer));
+    g_sensorPacketIndex = 0U;
+    g_mkrSensorData.valid = false;
 
     DEBUG_STRING("\r\n====================================\r\n");
     DEBUG_STRING(" MSP430FR5043 BC660K UART Bridge\r\n");
     DEBUG_STRING(" Debug UART : P2.0 TX, P2.1 RX\r\n");
+    DEBUG_STRING(" Sensor UART: P4.3 TX, P4.4 RX\r\n");
     DEBUG_STRING(" Modem UART : P5.0 TX, P5.1 RX\r\n");
     DEBUG_STRING(" MDM_PKEY   : P1.6\r\n");
     DEBUG_STRING(" MDM_PEN    : P1.7\r\n");
@@ -2095,6 +2417,7 @@ void NbIot_PrintHelp(void)
     DEBUG_STRING("  AT+CGATT?\r\n");
     DEBUG_STRING("  AT+CSQ\r\n");
     DEBUG_STRING("  payload    -> show office-format payload preview\r\n");
+    DEBUG_STRING("  $SENSOR,N2O=145,TEMP=22.6,HUM=84.1# -> parse and send UDP\r\n");
     DEBUG_STRING("  udp        -> quick check, one recovery if needed, then send UDP\r\n");
     DEBUG_STRING("  tcp        -> quick check, one recovery if needed, then send TCP\r\n");
 #if (ENABLE_PASSTHRU_MODE)
