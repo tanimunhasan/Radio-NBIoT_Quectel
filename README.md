@@ -19,7 +19,7 @@ The code is written in C and structured for Texas Instruments Code Composer Stud
 - TCP demo transmission
 - Basic network readiness check before sending
 - Simple modem recovery path for fatal errors
-- Office-style payload generation using IMEI, SIM ID, RSSI, and a temporary gas value
+- Payload generation using IMEI, SIM ID, RSSI, and a temporary gas value
 - Separate HAL layer for UART, GPIO, and system utilities
 
 ## Hardware Used
