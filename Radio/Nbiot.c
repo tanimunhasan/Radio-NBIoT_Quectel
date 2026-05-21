@@ -60,7 +60,7 @@ static char g_cmdBuffer[NBIOT_CMD_BUFFER_LEN];
 static uint16_t g_cmdIndex = 0U;
 static bool g_bridgeBannerPrinted = false;
 
-static NBIOT_OFFICE_PAYLOAD_TYPE g_officePayload;
+static PAYLOAD_TYPE g_officePayload;
 static char g_payloadBuffer[NBIOT_PAYLOAD_BUFFER_LEN];
 static char g_workBuffer[NBIOT_WORK_BUFFER_LEN];
 static char g_recvLineBuffer[NBIOT_RECV_LINE_LEN];
@@ -184,7 +184,7 @@ static bool NbIot_WaitForToken(const char *token, uint16_t timeoutMs, bool echoT
         {
             if (echoToDebug)
             {
-                hal_uart_debug_write_char((char)rx);
+                hal_uart_DebugWriteChar((char)rx);
             }
 
             if ((char)rx == token[matched])
@@ -209,6 +209,7 @@ static bool NbIot_WaitForToken(const char *token, uint16_t timeoutMs, bool echoT
 
 static bool NbIot_SendCommandAndWait(const char *cmd, const char *expected, uint16_t timeoutMs, bool echoToDebug)
 {
+    hal_uart_ModemFlush();
     DEBUG_STRING("\r\n[MDM TX] ");
     DEBUG_STRING(cmd);
 
@@ -355,7 +356,7 @@ static bool NbIot_WaitForRecvLine(char *lineBuffer,
         {
             if (echoToDebug)
             {
-                hal_uart_debug_write_char((char)rx);
+                hal_uart_DebugWriteChar((char)rx);
             }
 
             if ((rx != '\r') && (rx != '\n'))
@@ -398,7 +399,7 @@ static bool NbIot_WaitForQIOpenResult(uint8_t socketId, uint16_t timeoutMs)
     {
         while (hal_uart_ModemReadByte(&rx))
         {
-            hal_uart_debug_write_char((char)rx);
+            hal_uart_DebugWriteChar((char)rx);
 
             if ((rx != '\r') && (rx != '\n'))
             {
@@ -1116,7 +1117,7 @@ void NbIot_LoadOfficeDemoPayload(void)
              (unsigned int)gasValue);
 }
 
-void NbIot_BuildOfficePayload(const NBIOT_OFFICE_PAYLOAD_TYPE *payload,
+void NbIot_BuildOfficePayload(const PAYLOAD_TYPE *payload,
                               char *buffer,
                               uint16_t bufferSize)
 {
@@ -1169,7 +1170,6 @@ static void NbIot_BuildUdpOpenCommand(char *buffer,
                                       const char *serverPort,
                                       const char *localPort)
 {
-    (void)localPort;
 
     if ((buffer == 0) || (bufferSize == 0U))
     {
@@ -1182,7 +1182,7 @@ static void NbIot_BuildUdpOpenCommand(char *buffer,
              NBIOT_CMD_OPEN_SOCKET_BASE,
              serverIp,
              serverPort,
-             serverPort);
+             localPort);
 }
 
 static void NbIot_BuildTcpOpenCommand(char *buffer,
@@ -1348,6 +1348,8 @@ static NBIOT_STATE_ENUM NbIot_ProcessBootState(void)
     case NBIOT_BOOT_PWR_EN:
         DEBUG_STRING("\r\nModem GPIO init...\r\n");
         Modem_PowerKeySet(false);
+        hal_uart_initModemPort(MODEM_BAUD_9600);
+        hal_uart_ModemFlush();
         DEBUG_STRING("MDM_PEN = HIGH\r\n");
         Modem_PowerEnable(true);
         NbIot_DelayMs(NBIOT_POWER_SETTLE_MS);
@@ -1971,7 +1973,7 @@ static void NbIot_ProcessTerminalInput(void)
             if (g_cmdIndex < (NBIOT_CMD_BUFFER_LEN - 1U))
             {
                 g_cmdBuffer[g_cmdIndex++] = (char)rx;
-                hal_uart_debug_write_char((char)rx);
+                hal_uart_DebugWriteChar((char)rx);
             }
         }
     }
@@ -1983,7 +1985,7 @@ static void NbIot_ProcessModemOutput(void)
 
     while (hal_uart_ModemReadByte(&rx))
     {
-        hal_uart_debug_write_char((char)rx);
+        hal_uart_DebugWriteChar((char)rx);
     }
 }
 

@@ -17,6 +17,7 @@ ORDERED_OBJS += \
 "./Hal/hal_uart.obj" \
 "./Protocol/Protocol.obj" \
 "./Radio/Nbiot.obj" \
+"./Radio/SigFox.obj" \
 "../lnk_msp430fr5043.cmd" \
 $(GEN_CMDS__FLAG) \
 -llibmpu_init.a \
@@ -157,8 +158,8 @@ MSP430_Base_Radio.out: $(OBJS) $(CMD_SRCS) $(GEN_CMDS)
 # Other Targets
 clean:
 	-$(RM) $(EXE_OUTPUTS__QUOTED)
-	-$(RM) "main.obj" "Common\studiolib.obj" "Hal\hal_gpio.obj" "Hal\hal_system.obj" "Hal\hal_uart.obj" "Protocol\Protocol.obj" "Radio\Nbiot.obj" 
-	-$(RM) "main.d" "Common\studiolib.d" "Hal\hal_gpio.d" "Hal\hal_system.d" "Hal\hal_uart.d" "Protocol\Protocol.d" "Radio\Nbiot.d" 
+	-$(RM) "main.obj" "Common\studiolib.obj" "Hal\hal_gpio.obj" "Hal\hal_system.obj" "Hal\hal_uart.obj" "Protocol\Protocol.obj" "Radio\Nbiot.obj" "Radio\SigFox.obj" 
+	-$(RM) "main.d" "Common\studiolib.d" "Hal\hal_gpio.d" "Hal\hal_system.d" "Hal\hal_uart.d" "Protocol\Protocol.d" "Radio\Nbiot.d" "Radio\SigFox.d" 
 	-@echo 'Finished clean'
 	-@echo ' '
 

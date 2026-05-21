@@ -25,6 +25,9 @@ void hal_uart_init(void);
 
 /* Debug UART */
 void hal_uart_initDebugPort(void);
+void hal_uart_DebugWriteByte(uint8_t data);
+void hal_uart_DebugWriteChar(char c);
+void hal_uart_DebugWriteString(const char *str);
 bool hal_uart_DebugReadByte(uint8_t *data);
 
 /* Sensor UART */

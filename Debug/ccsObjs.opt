@@ -5,6 +5,7 @@
 "./Hal/hal_uart.obj"
 "./Protocol/Protocol.obj"
 "./Radio/Nbiot.obj"
+"./Radio/SigFox.obj"
 "../lnk_msp430fr5043.cmd"
 -llibmpu_init.a
 -llibmath.a

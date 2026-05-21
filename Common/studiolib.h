@@ -18,7 +18,5 @@ void UART_sendFloat(float value);
 void printUInt32(uint32_t value);
 
 
-void hal_uart_debug_write_char(char c);
 
-void hal_uart_DebugWriteString(const char *str);
 #endif /* COMMON_STUDIOLIB_H_ */

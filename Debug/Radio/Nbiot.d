@@ -24,10 +24,6 @@ Radio/Nbiot.obj: C:/ti/ccs1271/ccs/tools/compiler/ti-cgt-msp430_21.6.1.LTS/inclu
 Radio/Nbiot.obj: C:/ti/ccs1271/ccs/tools/compiler/ti-cgt-msp430_21.6.1.LTS/include/xlocale/_string.h
 Radio/Nbiot.obj: C:/ti/ccs1271/ccs/tools/compiler/ti-cgt-msp430_21.6.1.LTS/include/stdio.h
 Radio/Nbiot.obj: C:/ti/ccs1271/ccs/tools/compiler/ti-cgt-msp430_21.6.1.LTS/include/stdarg.h
-Radio/Nbiot.obj: D:/MSP430FR5969_Dynament_Implementation/MSP430_Base_Radio/Common/studiolib.h
-Radio/Nbiot.obj: D:/MSP430FR5969_Dynament_Implementation/MSP430_Base_Radio/Hal/hal_uart.h
-Radio/Nbiot.obj: D:/MSP430FR5969_Dynament_Implementation/MSP430_Base_Radio/Hal/hal_gpio.h
-Radio/Nbiot.obj: D:/MSP430FR5969_Dynament_Implementation/MSP430_Base_Radio/Hal/hal_system.h
 
 ../Radio/Nbiot.c:
 
@@ -76,12 +72,4 @@ C:/ti/ccs1271/ccs/tools/compiler/ti-cgt-msp430_21.6.1.LTS/include/xlocale/_strin
 C:/ti/ccs1271/ccs/tools/compiler/ti-cgt-msp430_21.6.1.LTS/include/stdio.h:
 
 C:/ti/ccs1271/ccs/tools/compiler/ti-cgt-msp430_21.6.1.LTS/include/stdarg.h:
-
-D:/MSP430FR5969_Dynament_Implementation/MSP430_Base_Radio/Common/studiolib.h:
-
-D:/MSP430FR5969_Dynament_Implementation/MSP430_Base_Radio/Hal/hal_uart.h:
-
-D:/MSP430FR5969_Dynament_Implementation/MSP430_Base_Radio/Hal/hal_gpio.h:
-
-D:/MSP430FR5969_Dynament_Implementation/MSP430_Base_Radio/Hal/hal_system.h:
 

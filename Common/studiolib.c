@@ -5,7 +5,6 @@
  *      Author: B4T
  */
 #include <hal_uart.h>
-#include <msp430.h>
 #include <stdio.h>
 #include <stdint.h>
 #include "studiolib.h"
@@ -47,22 +46,6 @@ void printUInt32(uint32_t value)
 }
 
 
-void hal_uart_debug_write_char(char c)
-{
-    while ((UCA3IFG & UCTXIFG) == 0) {}
-    UCA3TXBUF = (uint8_t)c;
-}
-
-void hal_uart_DebugWriteString(const char *str)
-{
-    while (*str != '\0')
-    {
-        hal_uart_debug_write_char(*str);
-        str++;
-    }
-}
-
-
 void UART_Debug_SendInt(int value)
 {
     char buf[16];
@@ -71,7 +54,7 @@ void UART_Debug_SendInt(int value)
 
     if (value == 0)
     {
-        hal_uart_debug_write_char('0');
+        hal_uart_DebugWriteChar('0');
         return;
     }
 
@@ -94,6 +77,6 @@ void UART_Debug_SendInt(int value)
 
     while (i > 0)
     {
-        hal_uart_debug_write_char(buf[--i]);
+        hal_uart_DebugWriteChar(buf[--i]);
     }
 }

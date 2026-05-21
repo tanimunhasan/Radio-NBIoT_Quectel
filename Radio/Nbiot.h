@@ -44,15 +44,6 @@
 #define NBIOT_CMD_READ_DATA_BASE     "AT+QIRD="
 
 /* -------------------------------------------------
- * Test endpoint
- * ------------------------------------------------- */
-#define NBIOT_TEST_SERVER_IP         "13.135.238.190"
-#define NBIOT_TEST_UDP_SERVER_PORT   "51300"
-#define NBIOT_TEST_TCP_SERVER_PORT   "51300"
-#define NBIOT_TEST_LOCAL_PORT        "51300"
-#define NBIOT_TEST_APN               "IOT.1NCE.NET"
-
-/* -------------------------------------------------
  * Office-style payload definition
  * ------------------------------------------------- */
 typedef struct
@@ -63,7 +54,7 @@ typedef struct
     char simId[24];
     uint8_t rssi;
     char hexBody[80];
-} NBIOT_OFFICE_PAYLOAD_TYPE;
+} PAYLOAD_TYPE;
 
 /* -------------------------------------------------
  * Top-level state machine
@@ -150,7 +141,7 @@ NBIOT_RESULT_ENUM NbIot_Process(void);
 
 /* office payload helpers */
 void NbIot_LoadOfficeDemoPayload(void);
-void NbIot_BuildOfficePayload(const NBIOT_OFFICE_PAYLOAD_TYPE *payload,
+void NbIot_BuildOfficePayload(const PAYLOAD_TYPE *payload,
                               char *buffer,
                               uint16_t bufferSize);
 

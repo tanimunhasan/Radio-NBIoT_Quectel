@@ -121,6 +121,26 @@ bool hal_uart_DebugReadByte(uint8_t *data)
     return true;
 }
 
+void hal_uart_DebugWriteByte(uint8_t data)
+{
+    while ((UCA3IFG & UCTXIFG) == 0) {}
+    UCA3TXBUF = data;
+}
+
+void hal_uart_DebugWriteChar(char c)
+{
+    hal_uart_DebugWriteByte((uint8_t)c);
+}
+
+void hal_uart_DebugWriteString(const char *str)
+{
+    while (*str != '\0')
+    {
+        hal_uart_DebugWriteChar(*str);
+        str++;
+    }
+}
+
 void hal_uart_ModemWriteByte(uint8_t data)
 {
     while ((UCA2IFG & UCTXIFG) == 0) {}

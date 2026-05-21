@@ -1,11 +1,20 @@
 #include <msp430.h>
 #include <stdint.h>
 
+#include "user_config.h"
 #include "studiolib.h"
 #include "hal_uart.h"
 #include "hal_gpio.h"
 #include "hal_system.h"
+
+#if(USE_NBIOT_RADIO)
 #include "Nbiot.h"
+#endif
+
+#if(USE_SIGFOX_RADIO)
+#include "SigFox.h"
+#endif
+
 
 static void Clock_Init(void)
 {
@@ -24,10 +33,19 @@ void main(void)
     Gpio_Init();
     hal_uart_initDebugPort();
 
+#if (USE_NBIOT_RADIO)
     NbIot_Init();
+#elif (USE_SIGFOX_RADIO)
+    SigFox_Init();
+#endif
 
     while (1)
     {
+#if (USE_NBIOT_RADIO)
         NbIot_Task();
+#elif (USE_SIGFOX_RADIO)
+        SigFox_Task();
+#endif
     }
+
 }
