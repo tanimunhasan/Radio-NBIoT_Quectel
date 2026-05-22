@@ -37,6 +37,7 @@ void main(void)
     NbIot_Init();
 #elif (USE_SIGFOX_RADIO)
     SigFox_Init();
+    __enable_interrupt();
 #endif
 
     while (1)

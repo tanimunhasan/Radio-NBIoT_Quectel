@@ -37,6 +37,18 @@
 #define SIGFOX_DEMO_PAYLOAD_HEX "009100E20349"
 #endif
 
+#ifndef SIGFOX_PERIODIC_GAS_ENABLE
+#define SIGFOX_PERIODIC_GAS_ENABLE   0U
+#endif
+
+#ifndef SIGFOX_PERIODIC_GAS_MINUTES
+#define SIGFOX_PERIODIC_GAS_MINUTES  20U
+#endif
+
+#ifndef SIGFOX_GAS_REQUEST_DOWNLINK
+#define SIGFOX_GAS_REQUEST_DOWNLINK  0U
+#endif
+
 /* -------------------------------------------------
  * local configuration
  * ------------------------------------------------- */
@@ -51,6 +63,9 @@
 #define SIGFOX_POWER_SETTLE_MS         200U
 #define SIGFOX_FATAL_BLINK_COUNT       6U
 #define SIGFOX_FATAL_BLINK_DELAY_MS    250U
+#define SIGFOX_GAS_PAYLOAD_BYTES       6U
+#define SIGFOX_GAS_MSG_TYPE            0x01U
+#define SIGFOX_GAS_STATUS_OK           0x01U
 
 /* -------------------------------------------------
  * local state
@@ -66,6 +81,13 @@ static bool g_bridgeBannerPrinted = false;
 
 static char g_respBuffer[SIGFOX_RESP_BUFFER_LEN];
 static SIGFOX_STATUS_TYPE g_sigfoxStatus;
+static uint16_t g_gasMessageCounter = 0U;
+static uint16_t g_fakeGasSeed = 1234U;
+
+#if (SIGFOX_PERIODIC_GAS_ENABLE)
+static volatile uint16_t g_periodicGasMinutes = 0U;
+static volatile bool g_periodicGasDue = false;
+#endif
 
 #if (ENABLE_PASSTHRU_MODE)
 static bool g_passThruMode = true;
@@ -105,6 +127,13 @@ static bool SigFox_IsHexChar(char ch);
 static bool SigFox_IsHexString(const char *text, uint8_t *length);
 static bool SigFox_CopyFirstHexToken(const char *src, char *dst, uint8_t expectedLen);
 static void SigFox_CopyDownlinkIfPresent(const char *src);
+static uint16_t SigFox_GetRandomGasValue(void);
+static void SigFox_StartGasReport(bool requestDownlink);
+
+#if (SIGFOX_PERIODIC_GAS_ENABLE)
+static void SigFox_RtcInit(void);
+static void SigFox_HandlePeriodicGasReport(void);
+#endif
 
 /* -------------------------------------------------
  * basic helpers
@@ -312,6 +341,76 @@ static void SigFox_ExitPassThruMode(void)
 }
 #endif
 
+#if (SIGFOX_PERIODIC_GAS_ENABLE)
+static void SigFox_RtcInit(void)
+{
+    CSCTL0_H = CSKEY_H;
+    PJSEL0 |= BIT4 | BIT5;
+    PJSEL1 &= ~(BIT4 | BIT5);
+    CSCTL4 &= ~LFXTOFF;
+    CSCTL5 &= ~LFXTOFFG;
+    SFRIFG1 &= ~OFIFG;
+    CSCTL0_H = 0U;
+
+    RTCCTL0_H = RTCKEY_H;
+    RTCCTL13 = RTCHOLD | RTCMODE | RTCBCD__HEX | RTCTEV__MIN | RTCSSEL__LFXT;
+    RTCTIM0 = 0U;
+    RTCTIM1 = 0U;
+    RTCDATE = 0x0101U;
+    RTCYEAR = 2026U;
+    RTCCTL0_L = RTCTEVIE;
+    RTCCTL13 &= ~RTCHOLD;
+    RTCCTL0_H = 0U;
+}
+
+static void SigFox_HandlePeriodicGasReport(void)
+{
+    if ((g_periodicGasDue == true) &&
+        (g_sigfoxState == SIGFOX_STATE_BRIDGE) &&
+        (g_sendState == SIGFOX_SEND_IDLE))
+    {
+        g_periodicGasDue = false;
+        SigFox_StartGasReport(SIGFOX_GAS_REQUEST_DOWNLINK != 0U);
+    }
+}
+#endif
+
+static uint16_t SigFox_GetRandomGasValue(void)
+{
+    g_fakeGasSeed = (uint16_t)((g_fakeGasSeed * 1103U) + 12345U);
+    return (uint16_t)(g_fakeGasSeed % 1001U);
+}
+
+static void SigFox_StartGasReport(bool requestDownlink)
+{
+    uint8_t payload[SIGFOX_GAS_PAYLOAD_BYTES];
+    uint16_t gasPpm;
+
+    gasPpm = SigFox_GetRandomGasValue();
+    g_gasMessageCounter++;
+
+    payload[0] = SIGFOX_GAS_MSG_TYPE;
+    payload[1] = SIGFOX_GAS_STATUS_OK;
+    payload[2] = (uint8_t)(gasPpm >> 8U);
+    payload[3] = (uint8_t)(gasPpm & 0x00FFU);
+    payload[4] = (uint8_t)(g_gasMessageCounter >> 8U);
+    payload[5] = (uint8_t)(g_gasMessageCounter & 0x00FFU);
+
+    if (SigFox_LoadPayloadBytes(payload, SIGFOX_GAS_PAYLOAD_BYTES, requestDownlink))
+    {
+        DEBUG_STRING("\r\n[SIGFOX] Periodic gas ppm: ");
+        UART_Debug_SendInt((int)gasPpm);
+        DEBUG_STRING("\r\n[SIGFOX] Payload: ");
+        DEBUG_STRING(g_sigfoxStatus.payloadHex);
+        DEBUG_STRING("\r\n");
+        g_sendState = SIGFOX_SEND_SET_POWER;
+    }
+    else
+    {
+        DEBUG_STRING("\r\n[SIGFOX] Failed to build gas payload.\r\n");
+    }
+}
+
 /* -------------------------------------------------
  * public API
  * ------------------------------------------------- */
@@ -332,6 +431,14 @@ void SigFox_Init(void)
     (void)SigFox_LoadPayloadHex(SIGFOX_DEMO_PAYLOAD_HEX, false);
     g_sigfoxStatus.lastSendOk = false;
     g_sigfoxStatus.downlinkAvailable = false;
+    g_gasMessageCounter = 0U;
+    g_fakeGasSeed = 1234U;
+
+#if (SIGFOX_PERIODIC_GAS_ENABLE)
+    g_periodicGasMinutes = 0U;
+    g_periodicGasDue = false;
+    SigFox_RtcInit();
+#endif
 
     DEBUG_STRING("\r\n====================================\r\n");
     DEBUG_STRING(" MSP430FR5043 Sigfox UART Bridge\r\n");
@@ -405,6 +512,10 @@ void SigFox_Task(void)
         SigFox_RequestFatalRecovery();
         return;
     }
+
+#if (SIGFOX_PERIODIC_GAS_ENABLE)
+    SigFox_HandlePeriodicGasReport();
+#endif
 }
 
 bool SigFox_LoadPayloadHex(const char *payloadHex, bool requestDownlink)
@@ -845,6 +956,13 @@ static void SigFox_ProcessTerminalInput(void)
                     SigFox_StartSendDemo(false);
                     return;
                 }
+                else if (strcmp(g_cmdBuffer, "gas") == 0)
+                {
+                    DEBUG_STRING("Starting generated gas uplink send...\r\n");
+                    g_cmdIndex = 0U;
+                    SigFox_StartGasReport(false);
+                    return;
+                }
                 else if (strcmp(g_cmdBuffer, "senddl") == 0)
                 {
                     DEBUG_STRING("Starting Sigfox uplink with callback/downlink...\r\n");
@@ -929,6 +1047,7 @@ void SigFox_PrintHelp(void)
     DEBUG_STRING("  pac          -> show stored PAC\r\n");
     DEBUG_STRING("  payload      -> show demo payload\r\n");
     DEBUG_STRING("  send         -> send demo uplink\r\n");
+    DEBUG_STRING("  gas          -> send generated gas uplink\r\n");
     DEBUG_STRING("  senddl       -> send demo uplink with callback/downlink\r\n");
     DEBUG_STRING("  sleep        -> AT$P=1\r\n");
     DEBUG_STRING("  wake         -> AT$P=0\r\n");
@@ -1114,6 +1233,31 @@ static void SigFox_CopyDownlinkIfPresent(const char *src)
     g_sigfoxStatus.downlinkHex[SIGFOX_DOWNLINK_HEX_LEN] = '\0';
     g_sigfoxStatus.downlinkAvailable = true;
 }
+
+#if (SIGFOX_PERIODIC_GAS_ENABLE)
+#pragma vector=RTC_C_VECTOR
+__interrupt void RTC_C_ISR(void)
+{
+    switch (__even_in_range(RTCIV, RTCIV__RT1PSIFG))
+    {
+    case RTCIV__RTCTEVIFG:
+        if (g_periodicGasMinutes < 65535U)
+        {
+            g_periodicGasMinutes++;
+        }
+
+        if (g_periodicGasMinutes >= SIGFOX_PERIODIC_GAS_MINUTES)
+        {
+            g_periodicGasMinutes = 0U;
+            g_periodicGasDue = true;
+        }
+        break;
+
+    default:
+        break;
+    }
+}
+#endif
 
 #endif /* USE_SIGFOX_RADIO */
 
